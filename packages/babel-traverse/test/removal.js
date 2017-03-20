@@ -31,4 +31,55 @@ describe("removal", function () {
       assert.equal(generateCode(rootPath), "x = () => {};", "body should be replaced with BlockStatement");
     });
   });
+
+  describe("comment sharing", function () {
+    function transpile(code) {
+      const ast = parse(code);
+      traverse(ast, {
+        Identifier: function (path) {
+          const node = path.node;
+          if (node.name === "removeme") {
+            path.remove();
+          }
+        },
+      });
+
+      return generate(ast.program).code;
+    }
+
+    it("preserve comment when only previous node", function() {
+      const actual = `0;
+// before
+removeme; // same line
+// after`;
+      const expected = `0; // before
+// after`;
+      assert.equal(transpile(actual), expected, "comment must be shared with previous node");
+    });
+
+    it("preserve comment when only next node", function() {
+      const actual = `// before
+removeme;
+// after
+0;`;
+      const expected = `// before
+// after
+0;`;
+      assert.equal(transpile(actual), expected, "comment must be shared with next node");
+    });
+
+    it("preserve comment when surrounded", function() {
+      const actual = `0;
+// before
+removeme;
+// after
+0;`;
+      const expected = `0; // before
+
+// after
+0;`;
+      console.log("actual", transpile(actual));
+      assert.equal(transpile(actual), expected, "comment must be shared with surrounding nodes");
+    });
+  });
 });
