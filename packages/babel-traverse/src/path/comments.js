@@ -17,20 +17,17 @@ export function shareCommentsWithSiblings() {
 
   const prev = this.getSibling(this.key - 1);
   const next = this.getSibling(this.key + 1);
-  const parent = this.parentPath;
-  if (prev.node) {
-    prev.addComments("trailing", leading);
-  } else if (next.node) {
-    next.addComments("leading", leading);
-  } else if (parent && parent.node) {
-    parent.addComments("leading", leading);
-  }
-  if (next.node) {
-    next.addComments("leading", trailing);
-  } else if (prev.node) {
+  const hasPrev = Boolean(prev.node);
+  const hasNext = Boolean(next.node);
+  if (hasPrev && hasNext) {
+    console.log("prev trailing", prev.node.trailingComments);
+    console.log("next leading", next.node.leadingComments);
+    // prev.addComments("trailing", leading);
+    //next.addComments("leading", trailing);
+  } else if (hasPrev) {
     prev.addComments("trailing", trailing);
-  } else if (parent && parent.node) {
-    parent.addComments("trailing", trailing);
+  } else if (hasNext) {
+    next.addComments("leading", leading);
   }
 }
 
@@ -54,7 +51,11 @@ export function addComments(type: string, comments: Array) {
   const key = `${type}Comments`;
 
   if (node[key]) {
-    node[key] = node[key].concat(comments);
+    if (type === "leading") {
+      node[key] = comments.concat(node[key]);
+    } else {
+      node[key] = node[key].concat(comments);
+    }
   } else {
     node[key] = comments;
   }
